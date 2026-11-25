@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS emulator_tokens (token_hash TEXT PRIMARY KEY, player_id TEXT NOT NULL REFERENCES players(id) ON DELETE CASCADE, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP, expires_at INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS emulator_tokens_player ON emulator_tokens(player_id);
+CREATE TABLE IF NOT EXISTS game_fingerprints (sha256 TEXT PRIMARY KEY, game_id TEXT NOT NULL REFERENCES games(id) ON DELETE CASCADE);
