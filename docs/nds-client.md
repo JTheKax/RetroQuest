@@ -1,0 +1,3 @@
+# Nintendo DS client foundation
+
+The JavaScript client is a host integration library, not a standalone emulator or an installed plugin. A compatible host must provide exact ROM bytes and synchronous ARM9 bus byte reads, call frame once per emulated frame, and call unload on reset or ROM close. Use ndsMemoryAdapter to assemble unsigned little-endian values. Supply onStatus and onAchievement callbacks for connection UI and practice notifications. Keep tokens private. Official unlock reporting is disabled. Native melonDS or DeSmuME bindings are not implemented. Run `node --test tests/*.test.js` with Node 20 or newer.
