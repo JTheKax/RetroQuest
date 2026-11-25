@@ -5,4 +5,9 @@ compatibility_date = "2026-11-25"
 directory = "./public"
 binding = "ASSETS"
 run_worker_first = ["/api/*"]
-# Add a D1 binding named DB in the Cloudflare dashboard before enabling database features.
+
+
+[[d1_databases]]
+binding = "DB"
+database_name = "retroquest-db"
+database_id = "666faa28-394e-407f-b17c-0e387926959d"
