@@ -13,7 +13,8 @@ if(p==="/api/health"){let database="unconfigured";if(db){try{await db.prepare("S
 if(!p.startsWith("/api/"))return env.ASSETS.fetch(req);
 if(!db)return json({error:"Database unavailable"},503);
 try{
-if(p==="/api/me"&&req.method==="GET"){const player=await session(req,db);return json({player});}
+if(p==="/api/me"&&req.method==="GET"){const player=await session(req,db);return json({player:player?{...player,owner:!!env.OWNER_PLAYER_ID&&player.id===env.OWNER_PLAYER_ID}:null});}
+if(p==="/api/owner/overview"&&req.method==="GET"){const player=await session(req,db);if(!player||!env.OWNER_PLAYER_ID||player.id!==env.OWNER_PLAYER_ID)return json({error:"Forbidden"},403);const counts=await db.prepare("SELECT (SELECT COUNT(*) FROM players) AS players,(SELECT COUNT(*) FROM games) AS games,(SELECT COUNT(*) FROM achievements) AS achievements,(SELECT COUNT(*) FROM unlocks) AS unlocks").first();const users=await db.prepare("SELECT id,username,created_at FROM players ORDER BY created_at DESC,id LIMIT 100").all();return json({counts,players:users.results});}
 if(req.method!=="POST")return json({error:"Not found"},404);
 if(req.headers.get("Origin")!==u.origin)return json({error:"Invalid origin"},403);
 if(p==="/api/logout"){const t=(req.headers.get("Cookie")||"").match(/(?:^|;\s*)__Host-rq=([a-f0-9]{64})(?:;|$)/)?.[1];if(t)await db.prepare("DELETE FROM sessions WHERE token_hash=?").bind(await digest(t)).run();return json({ok:true},200,{"Set-Cookie":cookie("",0)});}
