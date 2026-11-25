@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS forum_topics (id TEXT PRIMARY KEY, player_id TEXT NOT NULL REFERENCES players(id), title TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE IF NOT EXISTS forum_replies (id TEXT PRIMARY KEY, topic_id TEXT NOT NULL REFERENCES forum_topics(id) ON DELETE CASCADE, player_id TEXT NOT NULL REFERENCES players(id), body TEXT NOT NULL, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
+CREATE INDEX IF NOT EXISTS forum_reply_topic ON forum_replies(topic_id,created_at);
