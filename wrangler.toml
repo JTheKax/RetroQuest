@@ -11,3 +11,6 @@ run_worker_first = ["/api/*"]
 binding = "DB"
 database_name = "retroquest-db"
 database_id = "666faa28-394e-407f-b17c-0e387926959d"
+
+[vars]
+OWNER_PLAYER_ID = "4a66a68e-e07d-42aa-958e-4810ac43f169"
