@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS achievement_conditions (achievement_id TEXT PRIMARY KEY REFERENCES achievements(id) ON DELETE CASCADE, definition TEXT NOT NULL, updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP);
