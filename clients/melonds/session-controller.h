@@ -25,14 +25,14 @@ public:
  if(!network.setToken(value.toLatin1())){status("Invalid token");return;}
  status("Connecting...");
  network.connectAccount([this](QByteArray data,QString error){
- if(!error.isEmpty()){status(error);return;}
+ if(!error.isEmpty()){network.clear();status(error);return;}
  auto user=QJsonDocument::fromJson(data).object().value("username").toString();
- if(user.isEmpty()){status("Invalid account response");return;}
+ if(user.isEmpty()){network.clear();status("Invalid account response");return;}
  connected=true;status("Connected: "+user);lookup();
  });
  }
  void disconnectAccount(){network.clear();connected=false;{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}status("Disconnected");}
- void loadROM(QByteArray bytes){rom=std::move(bytes);{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}if(connected)lookup();}
+ void loadROM(QByteArray bytes){if(connected)network.unload();rom=std::move(bytes);{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}if(connected){if(rom.isEmpty())status("Connected; no ROM");else lookup();}}
  void unloadROM(){rom.clear();if(connected)network.unload();{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}status(connected?"Connected; no ROM":"Disconnected");}
  void lookup(){if(!connected||rom.isEmpty())return;status("Identifying ROM...");network.loadROM(rom,[this](QByteArray data,QString error){
  if(!error.isEmpty()){status(error);return;}
