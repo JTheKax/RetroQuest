@@ -5,6 +5,7 @@
 #include <QMessageBox>
 #include <QMetaObject>
 #include <mutex>
+#include <atomic>
 namespace retroquest {
 class SessionController : public QObject {
  Network network;
@@ -12,6 +13,7 @@ class SessionController : public QObject {
  std::mutex mutex;
  QByteArray rom;
  bool connected=false;
+ std::atomic<quint64> sessionEpoch{0};
  std::function<void(QString)> status;
 public:
  explicit SessionController(std::function<void(QString)> onStatus,QObject* parent=nullptr):QObject(parent),network(this),status(std::move(onStatus)){}
@@ -29,9 +31,9 @@ public:
  connected=true;status("Connected: "+user);lookup();
  });
  }
- void disconnectAccount(){network.clear();connected=false;{std::lock_guard<std::mutex> lock(mutex);bridge.unload();}status("Disconnected");}
- void loadROM(QByteArray bytes){rom=std::move(bytes);{std::lock_guard<std::mutex> lock(mutex);bridge.unload();}if(connected)lookup();}
- void unloadROM(){rom.clear();if(connected)network.unload();{std::lock_guard<std::mutex> lock(mutex);bridge.unload();}status(connected?"Connected; no ROM":"Disconnected");}
+ void disconnectAccount(){network.clear();connected=false;{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}status("Disconnected");}
+ void loadROM(QByteArray bytes){rom=std::move(bytes);{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}if(connected)lookup();}
+ void unloadROM(){rom.clear();if(connected)network.unload();{std::lock_guard<std::mutex> lock(mutex);++sessionEpoch;bridge.unload();}status(connected?"Connected; no ROM":"Disconnected");}
  void lookup(){if(!connected||rom.isEmpty())return;status("Identifying ROM...");network.loadROM(rom,[this](QByteArray data,QString error){
  if(!error.isEmpty()){status(error);return;}
  auto game=QJsonDocument::fromJson(data).object().value("game").toObject();
@@ -41,8 +43,8 @@ public:
  });}
  // Host must stop the emulation thread before destroying this controller.
  void frame(const ReadByte& read,const std::function<void(QString)>& notify){
- std::vector<QString> events;{std::lock_guard<std::mutex> lock(mutex);bridge.frame(read,[&](const Achievement& a){events.push_back(QString::fromStdString(a.title));});}
- for(const auto& title:events)QMetaObject::invokeMethod(this,[notify,title](){notify("RetroQuest practice: "+title);},Qt::QueuedConnection);
+ std::vector<QString> events;quint64 epoch;{std::lock_guard<std::mutex> lock(mutex);epoch=sessionEpoch.load();bridge.frame(read,[&](const Achievement& a){events.push_back(QString::fromStdString(a.title));});}
+ for(const auto& title:events)QMetaObject::invokeMethod(this,[this,notify,title,epoch](){if(epoch!=sessionEpoch.load())return;notify("RetroQuest practice: "+title);},Qt::QueuedConnection);
  }
 };
 }
